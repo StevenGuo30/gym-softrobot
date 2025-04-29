@@ -1,5 +1,9 @@
 from typing import Optional
 
+# import sys
+# import os
+# sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/../../.."))
+
 from gym import core
 from gym import spaces
 from gym.utils import seeding
@@ -14,6 +18,7 @@ from elastica.timestepper import extend_stepper_interface
 from elastica._calculus import _isnan_check
 
 from gym_softrobot import RENDERER_CONFIG
+RENDERER_CONFIG = RendererType.MATPLOTLIB
 from gym_softrobot.config import RendererType
 from gym_softrobot.envs.soft_pendulum.build import build_soft_pendulum
 from gym_softrobot.utils.custom_elastica.callback_func import (
@@ -154,7 +159,7 @@ class SoftPendulumEnv(core.Env):
     def get_state(self):
         # Build state
         rod = self.shearable_rod
-        pos_state1 = rod.position_collection[0, 0]
+        pos_state1 = rod.position_collection[0, 0] #position of the first node
         vel_state1 = rod.velocity_collection[0, 0]
         tangents_mean = np.mean(self.shearable_rod.tangents, axis=1)
         theta = np.arctan(tangents_mean[0] / tangents_mean[1])  # Target angle is 0
@@ -194,7 +199,7 @@ class SoftPendulumEnv(core.Env):
                 self.time_step,
             )
         etime = time.perf_counter()
-        # print(f'{self.counter=}, {etime-stime}sec, {self.time=}')
+        print(f'{self.counter=}, {etime-stime}sec, {self.time=}')
 
         """ Done is a boolean to reset the environment before episode is completed """
         terminated = False
@@ -202,7 +207,8 @@ class SoftPendulumEnv(core.Env):
         survive_reward = 0.0
         forward_reward = 0.0
         # FIXME: How to set control penalty
-        control_penalty = 0.0  # 0.005 * np.square(rest_kappa.ravel()).mean()
+        # control_penalty = 0.0  # 0.005 * np.square(rest_kappa.ravel()).mean()
+        control_penalty = 0.0
         # Position of the rod cannot be NaN, it is not valid, stop the simulation
         invalid_values_condition = _isnan_check(
             np.concatenate(
@@ -212,6 +218,8 @@ class SoftPendulumEnv(core.Env):
                 ]
             )
         )
+        print(f"position_collection:{self.shearable_rod.position_collection}")
+        print(f"velocity_collection:{self.shearable_rod.velocity_collection}")
 
         if invalid_values_condition:
             print(f" Nan detected in, exiting simulation now. {self.time=}")

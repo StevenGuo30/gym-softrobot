@@ -65,7 +65,7 @@ def build_soft_pendulum(
             self.fixed_directors = fixed_directors
 
         def constrain_values(self, rod, time):
-            rod.position_collection[1:, 0] = self.fixed_position[1:]
+            rod.position_collection[1:, 0] = self.fixed_position[1:] # Constrain ? direction, I guess [1:,0], Here, 0 is the time step
             rod.director_collection[0, :, 0] = self.fixed_directors[0, :]
             rod.director_collection[2, :, 0] = self.fixed_directors[2, :]
 

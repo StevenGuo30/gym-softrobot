@@ -104,7 +104,7 @@ def build_soft_pendulum(
     damping_constant = 2e-3
     simulator.dampen(shearable_rod).using(
         AnalyticalLinearDamper,
-        damping_constant=damping_constant,
+        uniform_damping_constant=damping_constant,
         time_step=time_step,
     )
 

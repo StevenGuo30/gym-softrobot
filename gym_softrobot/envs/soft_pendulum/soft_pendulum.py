@@ -113,7 +113,6 @@ class SoftPendulumEnv(core.Env):
         self,
         *,
         seed: Optional[int] = None,
-        return_info: bool = False,
         options: Optional[dict] = None,
     ):
         super().reset(seed=seed)
@@ -151,10 +150,7 @@ class SoftPendulumEnv(core.Env):
         # Initial State
         state = self.get_state()
 
-        if return_info:
-            return state, {}
-        else:
-            return state
+        return state, {}
 
     def get_state(self):
         # Build state
@@ -199,8 +195,7 @@ class SoftPendulumEnv(core.Env):
                 self.time_step,
             )
         etime = time.perf_counter()
-        print(f'{self.counter=}, {etime-stime}sec, {self.time=}')
-
+        # print(f'c={self.counter}, walltime={etime-stime:.3f}sec, sim_time={self.time:.2f}s, {action[0]=:.3e}')
         """ Done is a boolean to reset the environment before episode is completed """
         terminated = False
         truncated = False
@@ -218,9 +213,7 @@ class SoftPendulumEnv(core.Env):
                 ]
             )
         )
-        print(f"position_collection:{self.shearable_rod.position_collection}")
-        print(f"velocity_collection:{self.shearable_rod.velocity_collection}")
-
+        
         if invalid_values_condition:
             print(f" Nan detected in, exiting simulation now. {self.time=}")
             terminated = True

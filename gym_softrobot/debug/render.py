@@ -18,7 +18,7 @@ def main():
     for step in range(10):
         env.render()  # rendering
         action = env.action_space.sample()
-        observation, reward, done, info = env.step(action)
+        observation, reward, done, teminate, info = env.step(action)
         print(f"{step=:2}| {reward=}, {done=}")
         if done:
             break

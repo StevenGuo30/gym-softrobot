@@ -4,9 +4,9 @@ from typing import Optional
 # import os
 # sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/../../.."))
 
-from gym import core
-from gym import spaces
-from gym.utils import seeding
+from gymnasium import core
+from gymnasium import spaces
+from gymnasium.utils import seeding
 
 from collections import defaultdict
 import time
@@ -18,7 +18,6 @@ from elastica.timestepper import extend_stepper_interface
 from elastica._calculus import _isnan_check
 
 from gym_softrobot import RENDERER_CONFIG
-RENDERER_CONFIG = RendererType.MATPLOTLIB
 from gym_softrobot.config import RendererType
 from gym_softrobot.envs.soft_pendulum.build import build_soft_pendulum
 from gym_softrobot.utils.custom_elastica.callback_func import (
@@ -55,6 +54,7 @@ class SoftPendulumEnv(core.Env):
     """
 
     metadata = {"render.modes": ["rgb_array"]}
+    RENDERER_CONFIG = RendererType.MATPLOTLIB
 
     def __init__(
         self,
@@ -305,7 +305,7 @@ class SoftPendulumEnv(core.Env):
             self.renderer.add_rod(
                 self.shearable_rod
             )  # TODO: maybe need add_rod instead
-            self.renderer.add_point(self._target.tolist() + [0], 0.02)
+            # self.renderer.add_point(self._target.tolist() + [0], 0.02)
 
         # POVRAY
         if RENDERER_CONFIG == RendererType.POVRAY:

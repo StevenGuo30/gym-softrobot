@@ -57,7 +57,7 @@ class SoftPendulumEnv(core.Env):
 
     def __init__(
         self,
-        final_time=10.0,
+        final_time=15.0,
         time_step=1.0e-4,
         recording_fps=25,
         n_elems=50,
@@ -199,7 +199,7 @@ class SoftPendulumEnv(core.Env):
         terminated = False
         truncated = False
         # np.shape(self.shearable_rod.tangents=(3:50)
-        survive_reward = np.arctan(self.shearable_rod.tangents[0,-1]/self.shearable_rod.tangents[1,-1]) # set it to be the angle of the fineal element
+        survive_reward = np.arctan(self.shearable_rod.tangents[0,-1]/self.shearable_rod.tangents[1,-1]) - np.pi # set it to be the angle of the fineal element
         forward_reward = 0.0
         # FIXME: How to set control penalty
         # control_penalty = 0.0  # 0.005 * np.square(rest_kappa.ravel()).mean()
@@ -220,11 +220,11 @@ class SoftPendulumEnv(core.Env):
             truncated = True
             survive_reward = -50.0 
         else:
-            distance_to_origin = np.abs(self.shearable_rod.position_collection[0, 0])
+            distance_to_origin = np.abs(self.shearable_rod.position_collection[0, 0]) # distance to origin
             tangents_mean = np.mean(self.shearable_rod.tangents, axis=1)
             theta = np.arctan(tangents_mean[0] / tangents_mean[1])  # Target angle is 0
             distance_to_target_angle = ((theta + np.pi) % (2 * np.pi)) - np.pi
-            forward_reward = distance_to_origin + distance_to_target_angle**2
+            forward_reward = distance_to_origin + distance_to_target_angle*10
             # cm_pos = self.shearable_rod.compute_position_center_of_mass()[:2]
             # dist_to_target = np.linalg.norm(cm_pos - self._target, ord=2)
             # forward_reward = (self.prev_dist_to_target - dist_to_target) * 10
@@ -242,7 +242,7 @@ class SoftPendulumEnv(core.Env):
             terminated = True
             truncated = True
 
-        reward = forward_reward - control_penalty + survive_reward
+        reward = forward_reward - control_penalty + 10*survive_reward
         # reward *= 10 # Reward scaling
         # print(f'{reward=:.3f}: {forward_reward=:.3f}, {control_penalty=:.3f}, {survive_reward=:.3f}')
 

@@ -54,15 +54,14 @@ class SoftPendulumEnv(core.Env):
     """
 
     metadata = {"render.modes": ["rgb_array"]}
-    RENDERER_CONFIG = RendererType.MATPLOTLIB
 
     def __init__(
         self,
-        final_time=5.0,
+        final_time=10.0,
         time_step=1.0e-4,
         recording_fps=25,
         n_elems=50,
-        config_generate_video=False,
+        config_generate_video=True,
     ):
         # Integrator type
 
@@ -199,7 +198,8 @@ class SoftPendulumEnv(core.Env):
         """ Done is a boolean to reset the environment before episode is completed """
         terminated = False
         truncated = False
-        survive_reward = 0.0
+        # np.shape(self.shearable_rod.tangents=(3:50)
+        survive_reward = np.arctan(self.shearable_rod.tangents[0,-1]/self.shearable_rod.tangents[1,-1]) # set it to be the angle of the fineal element
         forward_reward = 0.0
         # FIXME: How to set control penalty
         # control_penalty = 0.0  # 0.005 * np.square(rest_kappa.ravel()).mean()
@@ -218,13 +218,13 @@ class SoftPendulumEnv(core.Env):
             print(f" Nan detected in, exiting simulation now. {self.time=}")
             terminated = True
             truncated = True
-            survive_reward = -50.0
+            survive_reward = -50.0 
         else:
             distance_to_origin = np.abs(self.shearable_rod.position_collection[0, 0])
             tangents_mean = np.mean(self.shearable_rod.tangents, axis=1)
             theta = np.arctan(tangents_mean[0] / tangents_mean[1])  # Target angle is 0
             distance_to_target_angle = ((theta + np.pi) % (2 * np.pi)) - np.pi
-            forward_reward = distance_to_origin * 10 + distance_to_target_angle**2
+            forward_reward = distance_to_origin + distance_to_target_angle**2
             # cm_pos = self.shearable_rod.compute_position_center_of_mass()[:2]
             # dist_to_target = np.linalg.norm(cm_pos - self._target, ord=2)
             # forward_reward = (self.prev_dist_to_target - dist_to_target) * 10
@@ -244,7 +244,7 @@ class SoftPendulumEnv(core.Env):
 
         reward = forward_reward - control_penalty + survive_reward
         # reward *= 10 # Reward scaling
-        # print(f'{reward=:.3f}: {forward_reward=:.3f}, {control_panelty=:.3f}, {survive_reward=:.3f}')
+        # print(f'{reward=:.3f}: {forward_reward=:.3f}, {control_penalty=:.3f}, {survive_reward=:.3f}')
 
         """ Return state:
             (1) current simulation time

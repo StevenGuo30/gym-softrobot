@@ -18,6 +18,9 @@ from gym_softrobot.utils.render.base_renderer import (
 )
 
 import pkg_resources
+import os
+from PIL import Image
+import sys
 
 def render_figure(fig:plt.figure):
     w, h = fig.get_size_inches()
@@ -28,6 +31,25 @@ def render_figure(fig:plt.figure):
     canvas.draw()
     data = np.asarray(canvas.buffer_rgba())[:,:,:3]
     return data
+
+def save_frame(arr: np.ndarray, frame_id: int, output_dir: str):
+    """
+    Save a frame as an image.
+
+    Parameters
+    ----------
+    arr : np.ndarray
+        The image data to save.
+    frame_id : int
+        The frame number.
+    output_dir : str
+        The directory to save the image in.
+    """
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    img = Image.fromarray(arr)
+    img.save(os.path.join(output_dir, f"frame_{frame_id:04d}.png"))
 
 def convert_marker_size(radius, ax):
     """
@@ -191,6 +213,14 @@ class Session(BaseElasticaRendererSession, BaseRenderer):
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("y")
         self.ax.set_zlabel("z")
+        
+        # save frame
+        self.save_frame = True
+        self.frame_id = 0
+        self.output_dir = os.path.join(
+            pkg_resources.resource_filename("gym_softrobot", "assets"),
+            "frames",
+        )
 
     @property
     def type(self):
@@ -226,6 +256,15 @@ class Session(BaseElasticaRendererSession, BaseRenderer):
         objects = [obj() for obj in self.object_collection]
         self.rescale_axis()
         rendered_data = render_figure(self.fig)
+        
+        ############### Save frame ###############
+        if self.save_frame:
+            frame_id = self.frame_id
+            save_frame(rendered_data, frame_id, self.output_dir)
+            self.frame_id += 1
+            print("Saving to:", self.output_dir)
+
+            
         return rendered_data
 
     def close(self):

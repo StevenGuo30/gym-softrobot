@@ -8,6 +8,8 @@ logs
 model
 save
 *.mp4
+*.png
+*.zip
 .DS_Store
 .vscode
 
@@ -35,6 +37,9 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+assets/
+tensorboard_log/
+
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

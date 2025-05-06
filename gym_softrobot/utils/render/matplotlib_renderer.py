@@ -270,8 +270,37 @@ class Session(BaseElasticaRendererSession, BaseRenderer):
     def close(self):
         plt.close(plt.gcf())
         self.object_collection.clear()
+        
+    def update_axes_limits(self):
+    # combine all positions of the objects
+        all_pos = []
+        for obj in self.object_collection:
+            if isinstance(obj, ElasticaRod):
+                pos, _ = obj.get_position_radius()
+                all_pos.append(pos)
+            elif isinstance(obj, ElasticaCylinder):
+                p1, p2, _ = obj.get_position_radius()
+                all_pos.append(p1[:, None])
+                all_pos.append(p2[:, None])
+            elif isinstance(obj, ElasticaSphere):
+                continue  
+
+        if not all_pos:
+            return
+
+        all_pos = np.hstack(all_pos)
+        xmin, ymin, zmin = np.min(all_pos, axis=1)
+        xmax, ymax, zmax = np.max(all_pos, axis=1)
+
+        margin = 0.1 * max(xmax - xmin, ymax - ymin, zmax - zmin)
+
+        self.ax.set_xlim(xmin - margin, xmax + margin)
+        self.ax.set_ylim(ymin - margin, ymax + margin)
+        self.ax.set_zlim(zmin - margin, zmax + margin)
+
 
     def rescale_axis(self):
         self.ax.relim()
         self.ax.autoscale_view()
+        self.update_axes_limits()
         set_axes_equal(self.ax)

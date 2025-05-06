@@ -77,12 +77,12 @@ class SoftPendulumEnv(core.Env):
         # Spaces
         self.n_action = 1
         action_size = (self.n_action,)
-        action_low = np.ones(action_size) * (-22)
-        action_high = np.ones(action_size) * (22)
+        action_low = np.ones(action_size) * (-22) * 2
+        action_high = np.ones(action_size) * (22) * 2
         self.action_space = spaces.Box(
             action_low, action_high, shape=action_size, dtype=np.float32
         )
-        self._observation_size = ((4),)  # 2 for target
+        self._observation_size = (((1 + n_elems) * 4 + 2),)  # 2 for angle
         self.observation_space = spaces.Box(
             -np.inf, np.inf, shape=self._observation_size, dtype=np.float32
         )
@@ -154,11 +154,15 @@ class SoftPendulumEnv(core.Env):
     def get_state(self):
         # Build state
         rod = self.shearable_rod
-        pos_state1 = rod.position_collection[0, 0] #position of the first node
-        vel_state1 = rod.velocity_collection[0, 0]
+        pos_state1 = rod.position_collection[
+            :2, :
+        ].ravel()  # position of the first node
+        vel_state1 = rod.velocity_collection[
+            :2, :
+        ].ravel()  # velocity of the first node
         tangents_mean = np.mean(self.shearable_rod.tangents, axis=1)
         theta = np.arctan(tangents_mean[0] / tangents_mean[1])  # Target angle is 0
-        theta = ((theta + np.pi) % (2 * np.pi)) - np.pi
+        # theta = ((theta + np.pi) % (2 * np.pi)) - np.pi
         previous_action = self._prev_action.copy()
         state = np.hstack([pos_state1, vel_state1, previous_action, theta]).astype(
             np.float32
@@ -199,7 +203,9 @@ class SoftPendulumEnv(core.Env):
         terminated = False
         truncated = False
         # np.shape(self.shearable_rod.tangents=(3:50)
-        survive_reward = np.arctan(self.shearable_rod.tangents[0,-1]/self.shearable_rod.tangents[1,-1]) - np.pi # set it to be the angle of the fineal element
+        # print(f"{self.shearable_rod.tangents[:,-1]}")
+        # survive_reward = -np.abs(np.arctan(self.shearable_rod.tangents[0,-1]/self.shearable_rod.tangents[1,-1])) + 0.15 # set it to be the angle of the fineal element
+        survive_reward = self.shearable_rod.position_collection[1, -1]
         forward_reward = 0.0
         # FIXME: How to set control penalty
         # control_penalty = 0.0  # 0.005 * np.square(rest_kappa.ravel()).mean()
@@ -213,18 +219,22 @@ class SoftPendulumEnv(core.Env):
                 ]
             )
         )
-        
+
         if invalid_values_condition:
             print(f" Nan detected in, exiting simulation now. {self.time=}")
             terminated = True
             truncated = True
-            survive_reward = -50.0 
+            survive_reward = -50.0
         else:
-            distance_to_origin = np.abs(self.shearable_rod.position_collection[0, 0]) # distance to origin
+            distance_to_origin = np.abs(
+                self.shearable_rod.position_collection[0, 0]
+            )  # distance to origin
             tangents_mean = np.mean(self.shearable_rod.tangents, axis=1)
-            theta = np.arctan(tangents_mean[0] / tangents_mean[1])  # Target angle is 0
-            distance_to_target_angle = ((theta + np.pi) % (2 * np.pi)) - np.pi
-            forward_reward = distance_to_origin + distance_to_target_angle*10
+            theta = (
+                -np.abs(np.arctan(tangents_mean[0] / tangents_mean[1])) + 0.15
+            )  # Target angle is 0
+            forward_reward = theta
+            # forward_reward = distance_to_origin + distance_to_target_angle*10
             # cm_pos = self.shearable_rod.compute_position_center_of_mass()[:2]
             # dist_to_target = np.linalg.norm(cm_pos - self._target, ord=2)
             # forward_reward = (self.prev_dist_to_target - dist_to_target) * 10
@@ -242,9 +252,16 @@ class SoftPendulumEnv(core.Env):
             terminated = True
             truncated = True
 
-        reward = forward_reward - control_penalty + 10*survive_reward
+        """ Termination """
+        if survive_reward < 0.0:
+            terminated = True
+            reward = -20.0
+        else:
+            reward = 10 * forward_reward - control_penalty + survive_reward
         # reward *= 10 # Reward scaling
-        # print(f'{reward=:.3f}: {forward_reward=:.3f}, {control_penalty=:.3f}, {survive_reward=:.3f}')
+        # print(
+        #     f"{reward=:.3f}: {forward_reward=:.3f}, {control_penalty=:.3f}, {survive_reward=:.3f}"
+        # )
 
         """ Return state:
             (1) current simulation time
@@ -287,12 +304,12 @@ class SoftPendulumEnv(core.Env):
                 from gym_softrobot.utils.render.matplotlib_renderer import Session
             else:
                 raise NotImplementedError("Rendering module is not imported properly")
-            assert issubclass(Session, BaseRenderer), (
-                "Rendering module is not properly subclassed"
-            )
-            assert issubclass(Session, BaseElasticaRendererSession), (
-                "Rendering module is not properly subclassed"
-            )
+            assert issubclass(
+                Session, BaseRenderer
+            ), "Rendering module is not properly subclassed"
+            assert issubclass(
+                Session, BaseElasticaRendererSession
+            ), "Rendering module is not properly subclassed"
             self.viewer = pyglet_rendering.SimpleImageViewer(maxwidth=maxwidth)
             self.renderer = Session(width=maxwidth, height=int(maxwidth * aspect_ratio))
             self.renderer.add_rod(
@@ -320,7 +337,9 @@ class SoftPendulumEnv(core.Env):
                 [state_image, np.hstack([state_image_side, state_image_top])]
             )
         elif RENDERER_CONFIG == RendererType.MATPLOTLIB:
-            state_image = self.renderer.render()
+            state_image = self.renderer.render(
+                int(maxwidth * 10), int(maxwidth * aspect_ratio * 10)
+            )
         else:
             raise NotImplementedError("Rendering module is not imported properly")
 

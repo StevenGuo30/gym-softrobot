@@ -3,6 +3,7 @@ from typing import Optional, Iterable
 import numpy as np
 
 import matplotlib
+
 matplotlib.use("Agg")  # Must be before importing matplotlib.pyplot or pylab!
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -22,15 +23,17 @@ import os
 from PIL import Image
 import sys
 
-def render_figure(fig:plt.figure):
+
+def render_figure(fig: plt.figure):
     w, h = fig.get_size_inches()
     dpi_res = fig.get_dpi()
-    w, h = int(np.ceil(w * dpi_res)), int(np.ceil(h*dpi_res))
+    w, h = int(np.ceil(w * dpi_res)), int(np.ceil(h * dpi_res))
 
     canvas = FigureCanvasAgg(fig)
     canvas.draw()
-    data = np.asarray(canvas.buffer_rgba())[:,:,:3]
+    data = np.asarray(canvas.buffer_rgba())[:, :, :3]
     return data
+
 
 def save_frame(arr: np.ndarray, frame_id: int, output_dir: str):
     """
@@ -47,9 +50,10 @@ def save_frame(arr: np.ndarray, frame_id: int, output_dir: str):
     """
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    
+
     img = Image.fromarray(arr)
     img.save(os.path.join(output_dir, f"frame_{frame_id:04d}.png"))
+
 
 def convert_marker_size(radius, ax):
     """
@@ -63,22 +67,23 @@ def convert_marker_size(radius, ax):
     """
     xlim = ax.get_xlim()
     ylim = ax.get_ylim()
-    max_axis_length = max(abs(xlim[1]-xlim[0]), abs(ylim[1]-ylim[0]))
-    scaling_factor = 3.0e3 * (2*0.1) / max_axis_length
+    max_axis_length = max(abs(xlim[1] - xlim[0]), abs(ylim[1] - ylim[0]))
+    scaling_factor = 3.0e3 * (2 * 0.1) / max_axis_length
     return np.sqrt(np.pi * (scaling_factor * radius))
-    #ppi = 72 # standard point size in matplotlib is 72 points per inch (ppi), no matter the dpi
-    #point_whole_ax = 5 * 0.8 * ppi
-    #point_radius= 2 * radius / 1.0 * point_whole_ax
-    #return point_radius**2
+    # ppi = 72 # standard point size in matplotlib is 72 points per inch (ppi), no matter the dpi
+    # point_whole_ax = 5 * 0.8 * ppi
+    # point_radius= 2 * radius / 1.0 * point_whole_ax
+    # return point_radius**2
+
 
 def set_axes_equal(ax):
-    '''Make axes of 3D plot have equal scale so that spheres appear as spheres,
+    """Make axes of 3D plot have equal scale so that spheres appear as spheres,
     cubes as cubes, etc..  This is one possible solution to Matplotlib's
     ax.set_aspect('equal') and ax.axis('equal') not working for 3D.
 
     Input
       ax: a matplotlib axis, e.g., as output from plt.gca().
-    '''
+    """
 
     x_limits = ax.get_xlim3d()
     y_limits = ax.get_ylim3d()
@@ -93,11 +98,12 @@ def set_axes_equal(ax):
 
     # The plot bounding box is a sphere in the sense of the infinity
     # norm, hence I call half the max range the plot radius.
-    plot_radius = 0.5*max([x_range, y_range, z_range])
+    plot_radius = 0.5 * max([x_range, y_range, z_range])
 
     ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
     ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
     ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
+
 
 class Geom(ABC):
     @abstractmethod
@@ -106,7 +112,7 @@ class Geom(ABC):
 
 
 class ElasticaRod(Geom):
-    # RGB color must be 2d array 
+    # RGB color must be 2d array
     rgb_color = np.array([[0.35, 0.29, 1.0]])
 
     def __init__(self, rod, ax):
@@ -115,7 +121,13 @@ class ElasticaRod(Geom):
 
         # Initialize scatter plot
         pos, rad = self.get_position_radius()
-        self.scatter = ax.scatter(pos[0,:], pos[1,:], pos[2,:], s=convert_marker_size(rad, ax), c=ElasticaRod.rgb_color)
+        self.scatter = ax.scatter(
+            pos[0, :],
+            pos[1, :],
+            pos[2, :],
+            s=convert_marker_size(rad, ax),
+            c=ElasticaRod.rgb_color,
+        )
 
     def get_position_radius(self):
         pos = self.rod.position_collection.copy()
@@ -134,8 +146,9 @@ class ElasticaRod(Geom):
 
         # Updater radius
         self.scatter.set_sizes(convert_marker_size(rad, self.ax))
-        
+
         return self.scatter
+
 
 class ElasticaRodDirector(Geom):
     # TODO
@@ -157,9 +170,15 @@ class ElasticaCylinder(Geom):
         # Initialize scatter plot
         pos1, pos2, rad = self.get_position_radius()
         end_caps = np.vstack((pos1, pos2))
-        size = convert_marker_size(rad/2, ax)
-        self.scatter = ax.scatter(end_caps[:,0], end_caps[:,1], end_caps[:,2], s=size, c=ElasticaCylinder.rgb_color)
-        #self.line, = ax.plot(end_caps[:,0], end_caps[:,1], end_caps[:,2], linewidth=size**0.5, c=ElasticaCylinder.rgb_color)
+        size = convert_marker_size(rad / 2, ax)
+        self.scatter = ax.scatter(
+            end_caps[:, 0],
+            end_caps[:, 1],
+            end_caps[:, 2],
+            s=size,
+            c=ElasticaCylinder.rgb_color,
+        )
+        # self.line, = ax.plot(end_caps[:,0], end_caps[:,1], end_caps[:,2], linewidth=size**0.5, c=ElasticaCylinder.rgb_color)
 
     def get_position_radius(self):
         rad = self.body.radius[0]
@@ -173,15 +192,15 @@ class ElasticaCylinder(Geom):
         # Update scatter plot positions
         pos1, pos2, rad = self.get_position_radius()
         end_caps = np.vstack((pos1, pos2))
-        self.scatter._offsets3d = end_caps[:,0], end_caps[:,1], end_caps[:,2]
+        self.scatter._offsets3d = end_caps[:, 0], end_caps[:, 1], end_caps[:, 2]
 
         # Update line plot positions
-        #self.line.set_data(end_caps[:,0], end_caps[:,1])
-        #self.line.set_3d_properties(end_caps[:,2])
+        # self.line.set_data(end_caps[:,0], end_caps[:,1])
+        # self.line.set_3d_properties(end_caps[:,2])
 
         # Updater radius (rigid body)
-        
-        #return [self.scatter, self.line]
+
+        # return [self.scatter, self.line]
         return [self.scatter]
 
 
@@ -190,7 +209,13 @@ class ElasticaSphere(Geom):
 
     def __init__(self, loc, radius, ax):
         # Initialize scatter plot
-        self.scatter = ax.scatter(loc[0], loc[1], loc[2], s=convert_marker_size(radius, ax), c=ElasticaSphere.rgb_color)
+        self.scatter = ax.scatter(
+            loc[0],
+            loc[1],
+            loc[2],
+            s=convert_marker_size(radius, ax),
+            c=ElasticaSphere.rgb_color,
+        )
 
     def __call__(self):
         return self.scatter
@@ -205,7 +230,7 @@ class Session(BaseElasticaRendererSession, BaseRenderer):
 
         px = 1.0 / dpi
         self.fig = plt.figure(
-            figsize=(width*px,height*px),
+            figsize=(width * px, height * px),
             frameon=True,
             dpi=dpi,
         )
@@ -213,7 +238,7 @@ class Session(BaseElasticaRendererSession, BaseRenderer):
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("y")
         self.ax.set_zlabel("z")
-        
+
         # save frame
         self.save_frame = True
         self.frame_id = 0
@@ -242,8 +267,8 @@ class Session(BaseElasticaRendererSession, BaseRenderer):
         self,
         width: Optional[int] = None,
         height: Optional[int] = None,
-        camera_param: Optional[tuple] = None, # POVray parameter
-        **kwargs
+        camera_param: Optional[tuple] = None,  # POVray parameter
+        **kwargs,
     ):
         # Reset width and height
         if not width:
@@ -256,23 +281,22 @@ class Session(BaseElasticaRendererSession, BaseRenderer):
         objects = [obj() for obj in self.object_collection]
         self.rescale_axis()
         rendered_data = render_figure(self.fig)
-        
+
         ############### Save frame ###############
         if self.save_frame:
             frame_id = self.frame_id
             save_frame(rendered_data, frame_id, self.output_dir)
             self.frame_id += 1
-            print("Saving to:", self.output_dir)
+            # print("Saving to:", self.output_dir)
 
-            
         return rendered_data
 
     def close(self):
         plt.close(plt.gcf())
         self.object_collection.clear()
-        
+
     def update_axes_limits(self):
-    # combine all positions of the objects
+        # combine all positions of the objects
         all_pos = []
         for obj in self.object_collection:
             if isinstance(obj, ElasticaRod):
@@ -283,7 +307,7 @@ class Session(BaseElasticaRendererSession, BaseRenderer):
                 all_pos.append(p1[:, None])
                 all_pos.append(p2[:, None])
             elif isinstance(obj, ElasticaSphere):
-                continue  
+                continue
 
         if not all_pos:
             return
@@ -297,7 +321,6 @@ class Session(BaseElasticaRendererSession, BaseRenderer):
         self.ax.set_xlim(xmin - margin, xmax + margin)
         self.ax.set_ylim(ymin - margin, ymax + margin)
         self.ax.set_zlim(zmin - margin, zmax + margin)
-
 
     def rescale_axis(self):
         self.ax.relim()

@@ -9,13 +9,15 @@ gym_softrobot.RENDERER_CONFIG = RendererType.MATPLOTLIB
 
 env = SoftPendulumEnv(config_generate_video=True, final_time=50)
 # Load the model
-save_path = "/Users/jiamiaoguo/Desktop/Code/gym-softrobot/PPO_results/PPO_step_result_260000_steps"
+# save_path = "/Users/jiamiaoguo/Desktop/Code/gym-softrobot/PPO_results_parallel/PPO_step_result_600000_steps"
+save_path = "/Users/jiamiaoguo/Desktop/Code/gym-softrobot/PPO_results/PPO_step_result_270000_steps"
 model = PPO.load(save_path)
 
 obs, _ = env.reset()
 
 for step in tqdm(range(1000)):
-    action, _states = model.predict(obs)
+    action, states = model.predict(obs)
+    print(f"{step=:2}| {action=}")
     obs, rewards, terminate, truncated, info = env.step(action)
     env.render()
     # print(f"{step=:2}| {rewards=}, {terminate=}")

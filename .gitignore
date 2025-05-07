@@ -39,6 +39,8 @@ share/python-wheels/
 MANIFEST
 assets/
 tensorboard_log/
+PPO_results/
+PPO_results_parallel/
 
 
 # PyInstaller

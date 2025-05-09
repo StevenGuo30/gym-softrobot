@@ -107,5 +107,9 @@ def build_soft_pendulum(
         uniform_damping_constant=damping_constant,
         time_step=time_step,
     )
+    simulator.dampen(shearable_rod).using(
+        LaplaceDissipationFilter,
+        filter_order=3,
+    )
 
     return shearable_rod

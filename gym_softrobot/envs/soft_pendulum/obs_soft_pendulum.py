@@ -10,8 +10,7 @@ from tqdm import tqdm
 env = SoftPendulumEnv(config_generate_video=True, final_time=50)
 # Load the model
 # save_path = "/Users/jiamiaoguo/Desktop/Code/gym-softrobot/PPO_results_parallel/PPO_step_result_600000_steps"
-save_path = "/Users/jiamiaoguo/Desktop/Code/gym-softrobot/PPO_results_parallel/PPO_step_result_1_10000000_steps"
-# save_path = "/Users/jiamiaoguo/Desktop/Code/gym-softrobot/PPO_results/PPO_step_result_270000_steps"
+save_path = "/Users/jiamiaoguo/Desktop/Code/gym-softrobot/PPO_results_parallel/PPO_step_result_test"
 model = PPO.load(save_path)
 
 obs, _ = env.reset()

@@ -75,14 +75,16 @@ class SoftPendulumEnv(core.Env):
         self.n_seg = n_elems - 1
 
         # Spaces
-        self.n_action = 1
+        self.n_action = 2
         action_size = (self.n_action,)
         action_low = np.ones(action_size, dtype=np.float32) * (-22) * 2
         action_high = np.ones(action_size, dtype=np.float32) * (22) * 2
         self.action_space = spaces.Box(
             action_low, action_high, shape=action_size, dtype=np.float32
         )
-        self._observation_size = (((1 + n_elems) * 4 + 2),)  # 2 for angle
+        self._observation_size = (
+            ((1 + n_elems) * 4 + 2 + 1),
+        )  # 7 means pos_state1, vel_state1, previous_action,  theta;+2 is for angle;+1 is for z direction external force on the base
         self.observation_space = spaces.Box(
             -np.inf, np.inf, shape=self._observation_size, dtype=np.float32
         )

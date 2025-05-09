@@ -17,6 +17,7 @@ env = SubprocVecEnv(
     start_method="fork",
 )
 
+# Create a new model with updated network architecture
 model = PPO(
     "MlpPolicy",
     env,
@@ -26,13 +27,20 @@ model = PPO(
     vf_coef=1e-3,
     gamma=0.90,
 )
-
-
+name_prefix = "PPO_step_result_3"
+# Create checkpoint callback
 checkpoint_callback = CheckpointCallback(
-    save_freq=10000,
+    save_freq=10_000,
     save_path="./PPO_results_parallel/",
-    name_prefix="PPO_step_result_1",
+    name_prefix=name_prefix,
     save_replay_buffer=True,
     save_vecnormalize=True,
 )
-model.learn(total_timesteps=10_000_000, callback=checkpoint_callback, progress_bar=True)
+
+# Train the model
+model.learn(
+    total_timesteps=100_000_000, callback=checkpoint_callback, progress_bar=True
+)
+
+# Save the model
+model.save(f"PPO_results_parallel/{name_prefix}")

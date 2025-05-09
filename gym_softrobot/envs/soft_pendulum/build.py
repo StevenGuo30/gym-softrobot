@@ -14,7 +14,7 @@ _PENDULUM_PROPERTIES = {  # default parameters
     # Arm properties
     "youngs_modulus": 1e6,
     "density": 1000.0,
-    "shear_modulus": 666667, #poisson_ratio=0.5,
+    "shear_modulus": 666667,  # poisson_ratio=0.5,
 }
 _DEFAULT_SCALE_LENGTH = {
     "base_length": 1.0,
@@ -65,7 +65,8 @@ def build_soft_pendulum(
             self.fixed_directors = fixed_directors
 
         def constrain_values(self, system, time):
-            system.position_collection[1:, 0] = self.fixed_position[1:] # Constrain ? direction, I guess [1:,0], Here, 0 is the time step
+            # Constrain ? direction, I guess [1:,0], Here, 0 is the time step
+            system.position_collection[1:, 0] = self.fixed_position[1:]
             system.director_collection[0, :, 0] = self.fixed_directors[0, :]
             system.director_collection[2, :, 0] = self.fixed_directors[2, :]
 
@@ -94,7 +95,9 @@ def build_soft_pendulum(
             self.point_force = point_force
 
         def apply_forces(self, system, time: np.float_ = 0.0):
-            system.external_forces[0, 0] = self.point_force
+            system.external_forces[0, 0] = self.point_force[0]
+            # Add another external force on the z direction(gravity is on y direction)
+            system.external_forces[2, 0] = self.point_force[1]
 
     simulator.add_forcing_to(shearable_rod).using(
         PendulumPointForces, point_force=point_force

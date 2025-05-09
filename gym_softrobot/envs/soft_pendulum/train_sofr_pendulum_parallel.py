@@ -31,7 +31,7 @@ model = PPO(
 checkpoint_callback = CheckpointCallback(
     save_freq=10000,
     save_path="./PPO_results_parallel/",
-    name_prefix="PPO_step_result",
+    name_prefix="PPO_step_result_1",
     save_replay_buffer=True,
     save_vecnormalize=True,
 )

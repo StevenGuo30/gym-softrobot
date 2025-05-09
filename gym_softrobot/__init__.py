@@ -76,4 +76,4 @@ register(
 )
 
 """ Global Configuration Parameters """
-RENDERER_CONFIG = RendererType.MATPLOTLIB
+RENDERER_CONFIG = RendererType.POVRAY

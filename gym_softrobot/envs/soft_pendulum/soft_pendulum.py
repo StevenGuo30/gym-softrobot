@@ -77,8 +77,8 @@ class SoftPendulumEnv(core.Env):
         # Spaces
         self.n_action = 1
         action_size = (self.n_action,)
-        action_low = np.ones(action_size) * (-22) * 2
-        action_high = np.ones(action_size) * (22) * 2
+        action_low = np.ones(action_size, dtype=np.float32) * (-22) * 2
+        action_high = np.ones(action_size, dtype=np.float32) * (22) * 2
         self.action_space = spaces.Box(
             action_low, action_high, shape=action_size, dtype=np.float32
         )
@@ -233,7 +233,7 @@ class SoftPendulumEnv(core.Env):
             theta = (
                 -np.abs(np.arctan(tangents_mean[0] / tangents_mean[1])) + 0.15
             )  # Target angle is 0
-            forward_reward = theta
+            forward_reward = theta - 5e-3 * distance_to_origin
             # forward_reward = distance_to_origin + distance_to_target_angle*10
             # cm_pos = self.shearable_rod.compute_position_center_of_mass()[:2]
             # dist_to_target = np.linalg.norm(cm_pos - self._target, ord=2)
